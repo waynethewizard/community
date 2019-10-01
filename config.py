@@ -1,0 +1,2 @@
+"""Config vars"""
+import os
