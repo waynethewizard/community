@@ -6,8 +6,6 @@ Grab data, start with Reddit, as json blobs and store them in S3.
 """
 import datetime as dt
 import praw
-from praw.models import MoreComments
-
 import boto3
 import json
 
@@ -24,7 +22,7 @@ def reddit_instance():
   return reddit
 
 
-def clean_submission(submission):
+def clean_submission(article_id, submission):
     """
     Take Reddit submission and turn into dictionary
     """
@@ -35,94 +33,128 @@ def clean_submission(submission):
     except:
         submission_author = "None"
     data = {
-        "id": submission.id,
-        "title": submission.title,
-        "score": submission.score,
-        "url": submission.url,
-        "name": submission.name,
-        "author": submission_author,
-        "is_video": submission.is_video,
-        "over_18": submission.over_18,
-        "selftext": submission.selftext,
-        "shortlink": submission.shortlink,
-        "subreddit_type": submission.subreddit_type,
-        "subreddit_subscribers": submission.subreddit_subscribers,
-        "thumbnail": submission.thumbnail,
-        "ups": submission.ups,
-        "created_utc": created_iso,
-        "archived": now_iso
+        article_id : {
+            "title": submission.title,
+            "score": submission.score,
+            "url": submission.url,
+            "name": submission.name,
+            "author": submission_author,
+            "is_video": submission.is_video,
+            "over_18": submission.over_18,
+            "selftext": submission.selftext,
+            "shortlink": submission.shortlink,
+            "subreddit_type": submission.subreddit_type,
+            "subreddit_subscribers": submission.subreddit_subscribers,
+            "thumbnail": submission.thumbnail,
+            "ups": submission.ups,
+            "created_utc": created_iso,
+            "archived": now_iso
+        }
     }
-    for k, v in data.items():
+    for k, v in data[submission.id].items():
         if v == "":
             data[k] = "None"
     return data
 
-def clean_comment(comment):
+def clean_comment(_id, comment):
     """
     Clean the comment
     """
+    now_iso = dt.datetime.utcnow().isoformat()
+    created_iso = dt.datetime.utcfromtimestamp(comment.created_utc).isoformat()
     try:
         name = comment.author.name
     except:
         name = "None"
     data = {
-        "author": name,
-        "body": comment.body,
-        "ups": comment.ups,
-        "fullname": comment.fullname
+        _id : {
+            "author": name,
+            "body": comment.body,
+            "ups": comment.ups,
+            "fullname": comment.fullname,
+            "created_utc": created_iso,
+            "subreddit": str(comment.subreddit)
+        }
     }
-    for k, v in data.items():
+    for k, v in data[hash(comment.body)].items():
         if v == "":
             data[k] = "None"
     return data
 
 
-def subreddit_type_submissions(sub="writing", kind="hot"):
+def subreddit_type_submissions(submissions):
     """
     Connects to subreddit (sub) then
     iterates through submissions and returns them
     in list.
     """
-    comments = []
-    articles = []
-    red = reddit_instance()
-    subreddit = red.subreddit(sub)
-    if kind == "hot":
-        submissions = subreddit.hot()
-    elif kind == "top":
-        submissions = subreddit.top()
-    elif kind == "new":
-        submissions = subreddit.new()
-    elif kind == "random_rising":
-        submissions = subreddit.random_rising()
-    else:
-        assert False
+    comments = {}
+    articles = {}
 
     for submission in submissions:
-        article = clean_submission(submission)
-        article['subreddit'] = sub
-        articles.append(article)
+        article_id = submission.id
+        article = clean_submission(article_id, submission)
+        article[article_id]['subreddit'] = str(submission.subreddit)
+        articles.update(article)
 
+        submission.comments.replace_more(limit=0)
         for top_level_comment in submission.comments:
-            # if isinstance(top_level_comment, MoreComments):
-            #     continue
-            comment = clean_comment(top_level_comment)
-            comment['article_id'] = article['id']
-            comments.append(comment)
+            _id = hash(top_level_comment.body)
+            comment = clean_comment(_id, top_level_comment)
+            comment[hash(top_level_comment.body)]['article_id'] = article_id
+            comments.update(comment)
 
     return articles, comments
 
 
-def data_for_subreddit(sub, kind="new"):
+def data_for_subreddit(submissions):
     """
     """
-    #for kind in themes:
-    print("Pulling posts from {}, {}".format(sub, kind))
-    articles, comments = subreddit_type_submissions(sub, kind)
+    articles, comments = subreddit_type_submissions(submissions)
     return articles, comments
+
+
+def save_articles_and_comments(sub, submissions):
+    """
+    """
+    s3 = boto3.resource('s3')
+    now = dt.datetime.utcnow()
+    formatted_date = now.strftime("%Y-%m-%d-%H-%M-%S")
+
+    articles, comments = data_for_subreddit(submissions)
+    print("Number of articles, comments {}, {}".format(len(articles), len(comments)))
+    articles_name = 'articles/' + formatted_date + '_' + sub + '_articles.json'
+    comments_name = 'comments/' + formatted_date + '_' + sub + '_comments.json'
+    object = s3.Object('wsankey-capstone', articles_name)
+    object.put(Body=json.dumps(articles))
+    print("Finished writing articles to {}".format(articles_name))
+
+    object = s3.Object('wsankey-capstone', comments_name)
+    object.put(Body=json.dumps(comments))
+    print("Finished writing comments to {}".format(comments_name))
 
 
 if __name__ == "__main__":
     assert PRAW_KEY is not None
-    articles, comments = data_for_subreddit("gaming")
-    print(comments)
+    sub = "gaming"
+    red = reddit_instance()
+    subreddit = red.subreddit(sub)
+
+    print("Pulling posts from {}, {}.".format(sub, "hot"))
+    submissions = subreddit.hot()
+    save_articles_and_comments(sub, submissions)
+    print("="*50)
+
+    print("Pulling posts from {}, {}.".format(sub, "new"))
+    submissions = subreddit.new()
+    save_articles_and_comments(sub, submissions)
+    print("="*50)
+
+    print("Pulling posts from {}, {}.".format(sub, "top"))
+    submissions = subreddit.top()
+    save_articles_and_comments(sub, submissions)
+    print("="*50)
+
+    print("Pulling posts from {}, {}.".format(sub, "rising"))
+    submissions = subreddit.rising()
+    save_articles_and_comments(sub, submissions)
