@@ -9,12 +9,11 @@ import praw
 import boto3
 import json
 
-from config import PRAW_SECRET, PRAW_KEY, PRAW_USER_AGENT
+from config import PRAW_SECRET, PRAW_KEY, PRAW_USER_AGENT, SUBREDDITS
 
 
 def reddit_instance():
-  """
-  Return instance of reddit
+  """Return instance of reddit
   """
   reddit = praw.Reddit(client_id=PRAW_KEY,
                        client_secret=PRAW_SECRET,
@@ -23,8 +22,7 @@ def reddit_instance():
 
 
 def clean_submission(article_id, submission):
-    """
-    Take Reddit submission and turn into dictionary
+    """Take Reddit submission and turn into dictionary
     """
     now_iso = dt.datetime.utcnow().isoformat()
     created_iso = dt.datetime.utcfromtimestamp(submission.created_utc).isoformat()
@@ -57,8 +55,7 @@ def clean_submission(article_id, submission):
     return data
 
 def clean_comment(_id, comment):
-    """
-    Clean the comment
+    """Clean the comment
     """
     now_iso = dt.datetime.utcnow().isoformat()
     created_iso = dt.datetime.utcfromtimestamp(comment.created_utc).isoformat()
@@ -83,8 +80,7 @@ def clean_comment(_id, comment):
 
 
 def subreddit_type_submissions(submissions):
-    """
-    Connects to subreddit (sub) then
+    """Connects to subreddit (sub) then
     iterates through submissions and returns them
     in list.
     """
@@ -135,8 +131,12 @@ def save_articles_and_comments(sub, submissions):
 
 
 if __name__ == "__main__":
+    import time
+    import random
+    idx = random.randint(0, len(SUBREDDITS)-1)
+    start = time.time()
     assert PRAW_KEY is not None
-    sub = "gaming"
+    sub = SUBREDDITS[idx]
     red = reddit_instance()
     subreddit = red.subreddit(sub)
 
@@ -158,3 +158,5 @@ if __name__ == "__main__":
     print("Pulling posts from {}, {}.".format(sub, "rising"))
     submissions = subreddit.rising()
     save_articles_and_comments(sub, submissions)
+    end = time.time()
+    print("Elapsed time {}".format(end - start))
