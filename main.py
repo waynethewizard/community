@@ -130,7 +130,9 @@ def save_articles_and_comments(sub, submissions):
     print("Finished writing comments to {}".format(comments_name))
 
 
-if __name__ == "__main__":
+def lambda_handler(x, y):
+    """
+    """
     import time
     import random
     idx = random.randint(0, len(SUBREDDITS)-1)
@@ -160,3 +162,35 @@ if __name__ == "__main__":
     save_articles_and_comments(sub, submissions)
     end = time.time()
     print("Elapsed time {}".format(end - start))
+
+
+# if __name__ == "__main__":
+#     import time
+#     import random
+#     idx = random.randint(0, len(SUBREDDITS)-1)
+#     start = time.time()
+#     assert PRAW_KEY is not None
+#     sub = SUBREDDITS[idx]
+#     red = reddit_instance()
+#     subreddit = red.subreddit(sub)
+
+#     print("Pulling posts from {}, {}.".format(sub, "hot"))
+#     submissions = subreddit.hot()
+#     save_articles_and_comments(sub, submissions)
+#     print("="*50)
+
+#     print("Pulling posts from {}, {}.".format(sub, "new"))
+#     submissions = subreddit.new()
+#     save_articles_and_comments(sub, submissions)
+#     print("="*50)
+
+#     print("Pulling posts from {}, {}.".format(sub, "top"))
+#     submissions = subreddit.top()
+#     save_articles_and_comments(sub, submissions)
+#     print("="*50)
+
+#     print("Pulling posts from {}, {}.".format(sub, "rising"))
+#     submissions = subreddit.rising()
+#     save_articles_and_comments(sub, submissions)
+#     end = time.time()
+#     print("Elapsed time {}".format(end - start))
