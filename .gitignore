@@ -5,7 +5,8 @@ __pycache__/
 *.vscode
 # C extensions
 *.so
-
+lambda/
+*.zip
 # Distribution / packaging
 .Python
 build/

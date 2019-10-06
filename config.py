@@ -38,4 +38,8 @@ SUBREDDITS = [
     "eve"
     "terraria",
     "blender",
+    "design",
+    "photoshopbattles",
+    "graphic_design",
+    "logodesign"
 ]
