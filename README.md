@@ -6,6 +6,9 @@ The unit of analysis for nearly all of the data sources in this codebase is a co
 ### Use cases
 Having a database of comments for various themes allows us to see what a community is thinking down at the user level and over time. One potential use-case is to provide insight into how a community is responding to a particular issue or set of issues across any give time.
 
+### Config
+You will need access to AWS, Reddit's PRAW API, and the YouTube API to get started with this repository.
+
 ## Data sources
 The following data sources are currently being supported:
 * Reddit
