@@ -6,17 +6,22 @@ The unit of analysis for nearly all of the data sources in this codebase is a co
 ### Use case(s)
 Having a database of comments for various themes allows us to see what a community is thinking down at the user level and over time. One potential use-case is to provide insight into how a community is responding to a particular issue or set of issues across any give time.
 
-### Config
-You will need access to AWS, Reddit's PRAW API, and the YouTube API to get started with this repository.
+### Setup and configuration
+This code was developed under Python 3.6. Start by installing the requirements listed in `requirements.txt.` You will also need access to AWS, Reddit's PRAW API, and the YouTube API to get started with this repository.
 
 ## Data dictionary, model, and statistics
 
-The following image shows the working data model for Reddit (Articles, Comments, and Top Comments) and Youtube (Youtube General) tables.
+The following data dictionary shows the columns, data types, and tables for the various data we collect.
 
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datadictionary.png)
 
+These columns are stored in the following data model. From Reddit we create the Articles, Comments, and Top Comments tables. From Youtube we construct the YouTube General table.
 
-After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time.
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datamodel.png)
 
+After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time I was able to collect over 1.7M observations. Nearly all of the observations are stored in the Comments table.
+
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datastats.png)
 
 ## Data sources
 The following data sources are currently being supported:
@@ -27,7 +32,7 @@ Future work will gather data from:
 * Twitch
 
 ## ETL
-Data is extracted from the data sources into .json files stored on S3. Those json files are parsed, cleaned, and turned into CSVs (also stored on S3) which are copied over into the postgres db.
+Data is extracted from the APIs into .json files stored on S3. Those json files are parsed, cleaned, and turned into CSVs (also stored on S3) which are copied over into the postgres db. The data is cleaned in various ways. Two of these are (1) explicitly casting known types (e.g. using string.encode()); (2) only allowing permitted alphanumeric and space characters within the body of a comment.
 
 The lambda functions handle extracting the data into the JSON. The pipeline construced in the `etl` directory changes the log files into the CSVs. It also handles connecting and copying into Redshift.
 
@@ -44,9 +49,13 @@ TBD
 TBD
 
 ## Other considerations and future work
+This architecture can easily support large amounts of new data, scheduling tasks to run regularly, and involving other team members.
 
 ### Large amounts of new data
+Since this pipeline is built on top of AWS it can scale. Adding nodes to the RedShift cluster is done via the AWS interface and S3 can automatically scale with additional data moving into it.
 
 ### Running regularly
+The AWS lambdas that are built off of this repository can be scheduled to run at any hour of the day. Scheduling the Redshift COPY can be achieved via integrating this pipeline with Airflow.
 
 ### Team member access
+Add team members to this project via IAM roles in AWS.
