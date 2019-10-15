@@ -9,6 +9,13 @@ Having a database of comments for various themes allows us to see what a communi
 ### Config
 You will need access to AWS, Reddit's PRAW API, and the YouTube API to get started with this repository.
 
+## Data model and statistics
+The following image shows the working data model for Reddit (Articles, Comments, and Top Comments) and Youtube (Youtube General) tables.
+
+
+After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time.
+
+
 ## Data sources
 The following data sources are currently being supported:
 * Reddit
