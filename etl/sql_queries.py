@@ -1,10 +1,8 @@
 from community import config
 
 # DROP TABLES
-staging_articles_table_drop = "DROP table IF EXISTS staging_articles"
-staging_comments_table_drop = "DROP table IF EXISTS staging_comments"
 top_comments_table_drop = "DROP table if EXISTS top_comments"
-
+youtube_general_table_drop = "DROP table if EXISTS youtube_general"
 articles_table_drop = "DROP table IF EXISTS articles"
 comments_table_drop = "DROP table IF EXISTS comments"
 
@@ -47,11 +45,22 @@ CREATE TABLE IF NOT EXISTS top_comments
 );
 """)
 
+youtube_general_create = ("""
+CREATE TABLE IF NOT EXISTS youtube_general
+(
+    channel_id VARCHAR,
+    channel_title VARCHAR,
+    comment_count INT,
+    like_count INT,
+    title VARCHAR,
+    view_count INT
+);
+""")
 
 articles_copy = ("""
 COPY articles(title, score, url, author, created_utc, archived, subreddit, articleid)
-FROM {}
-CREDENTIALS {}
+FROM '{}'
+CREDENTIALS '{}'
 region 'us-east-1'
 CSV
 ACCEPTANYDATE
@@ -63,8 +72,8 @@ IGNOREHEADER 1;
 
 comments_copy = ("""
 COPY comments(author, body, ups, articleid)
-FROM {}
-CREDENTIALS {}
+FROM '{}'
+CREDENTIALS '{}'
 region 'us-east-1'
 ACCEPTINVCHARS AS '_'
 CSV
@@ -80,19 +89,37 @@ LEFT JOIN comments B ON A.articleid = B.articleid
 WHERE B.ups > 500
 """)
 
+youtube_general_copy = ("""
+COPY youtube_general(channel_id, channel_title,	comment_count,	like_count,	title,	view_count)
+FROM '{}'
+CREDENTIALS '{}'
+region 'us-east-1'
+ACCEPTINVCHARS AS '_'
+CSV
+dateformat 'auto'
+maxerror as 250
+IGNOREHEADER 1;
+""").format(config.YOUTUBE_CSV_LOCATION, config.ARN)
+
+
 # QUERY LISTS
 create_table_queries = [
     articles_table_create,
     comments_table_create,
-    top_comments_create
+    top_comments_create,
+    youtube_general_create,
     ]
+
 drop_table_queries = [
     articles_table_drop,
     comments_table_drop,
-    top_comments_table_drop
+    top_comments_table_drop,
+    youtube_general_table_drop,
     ]
+
 copy_table_queries = [
-    articles_copy,
-    comments_copy,
-    top_comments_sql
+    # articles_copy,
+    # comments_copy,
+
+    youtube_general_copy,
 ]
