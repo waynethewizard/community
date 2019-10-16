@@ -34,14 +34,24 @@ The raw data is structured such that the article id is the key to the dictionary
 "is_video": false, "over_18": false, "selftext": "", "shortlink": "https://redd.it/dden4u", "subreddit_type": "public", "subreddit_subscribers": 41733, "thumbnail": "https://b.thumbs.redditmedia.com/K3Jx0cc0NY1gpNgyB3mrF_U-WU8FpZIVXlzzQeDXnAU.jpg", "ups": 57, "created_utc": "2019-10-04T22:29:50", "archived": "2019-10-05T12:26:36.970597", "subreddit": "indiegames"
 `
 
-This is a typical example of the articles data being collected from Reddit. The data is of various types, of various lengths, and may contain escape characters (e.g. \n) incompatible with Redshift. Data may be missing (the example is missing `selftext`) and datetimes will need to be converted to dates.
+This is a typical example of the articles data being collected from Reddit. The data is of various types, of various lengths, and may contain escape characters (e.g. \n) incompatible with Redshift. Data may be missing (the example is missing `selftext`) and datetimes will need to be converted to dates. The Reddit comment and YouTube data have similar issues as the ones just described.
 
 The steps taken to clean this data was (1) identify only the fields we want to bring into Redshift and only keep that information; (2) remove all illegal characters for Redshift; and (3) save the transformed data as a CSV.
 
 ## Step 3. The Data Model
+These columns are stored in the following data model. From Reddit we create the Articles, Comments, and Top Comments tables. From Youtube we construct the YouTube General table.
+
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datamodel.png)
 
 
 ## Step 4. ETL and modeling the data
+The following data dictionary shows the columns, data types, and tables for the various data we collect.
+
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datadictionary.png)
+
+After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time I was able to collect over 1.7M observations. Nearly all of the observations are stored in the Comments table.
+
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datastats.png)
 
 
 ## Step 5. What's the goal again? And other considerations
@@ -57,45 +67,3 @@ The AWS lambdas that are built off of this repository can be scheduled to run at
 
 ### Team member access
 Add team members to this project via IAM roles in AWS.
-
-## Data dictionary, model, and statistics
-
-The following data dictionary shows the columns, data types, and tables for the various data we collect.
-
-![Data model](https://github.com/wsankey/community/blob/master/capstone_datadictionary.png)
-
-These columns are stored in the following data model. From Reddit we create the Articles, Comments, and Top Comments tables. From Youtube we construct the YouTube General table.
-
-![Data model](https://github.com/wsankey/community/blob/master/capstone_datamodel.png)
-
-After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time I was able to collect over 1.7M observations. Nearly all of the observations are stored in the Comments table.
-
-![Data model](https://github.com/wsankey/community/blob/master/capstone_datastats.png)
-
-## Data sources
-The following data sources are currently being supported:
-* Reddit
-* YouTube (in progress)
-
-Future work will gather data from:
-* Twitch
-
-## ETL
-Data is extracted from the APIs into .json files stored on S3. Those json files are parsed, cleaned, and turned into CSVs (also stored on S3) which are copied over into the postgres db. The data is cleaned in various ways. Two of these are (1) explicitly casting known types (e.g. using string.encode()); (2) only allowing permitted alphanumeric and space characters within the body of a comment.
-
-The lambda functions handle extracting the data into the JSON. The pipeline construced in the `etl` directory changes the log files into the CSVs. It also handles connecting and copying into Redshift.
-
-### Reddit lambda function
-The lambda function writes the articles and comments to json files in the s3 bucket. The next script converts those logs to csv files. The csv files are then inserted into Redshift.
-
-#### Cleaning Reddit data
-Reddit comment threads can be excessively messy. Hence we only allow alpha-numeric characters (and spaces) into the body field in the Redshift postgres table.
-
-### YouTube lambda function
-TBD
-
-#### Cleaning YouTube data
-TBD
-
-## Other considerations and future work
-
