@@ -25,9 +25,17 @@ For both the Reddit and YouTube data the intent is to save as raw as possible JS
 
 The raw data is structured such that the article id is the key to the dictionary of information. Here is one example of one Reddit article in one S3 .json log file.
 
-```
-{"dden4u": {"title": "The Indie Industry: Defying the Odds", "score": 57, "url": "https://www.youtube.com/watch?v=VwV_59LBF4E", "name": "t3_dden4u", "author": "bisquick_quick", "is_video": false, "over_18": false, "selftext": "", "shortlink": "https://redd.it/dden4u", "subreddit_type": "public", "subreddit_subscribers": 41733, "thumbnail": "https://b.thumbs.redditmedia.com/K3Jx0cc0NY1gpNgyB3mrF_U-WU8FpZIVXlzzQeDXnAU.jpg", "ups": 57, "created_utc": "2019-10-04T22:29:50", "archived": "2019-10-05T12:26:36.970597", "subreddit": "indiegames"
-```
+`
+{"dden4u": {"title": "The Indie Industry: Defying the Odds", "score": 57,
+`
+`"url": "https://www.youtube.com/watch?v=VwV_59LBF4E", "name": "t3_dden4u", "author": "bisquick_quick",
+`
+`
+"is_video": false, "over_18": false, "selftext": "", "shortlink": "https://redd.it/dden4u", "subreddit_type": "public", "subreddit_subscribers": 41733, "thumbnail": "https://b.thumbs.redditmedia.com/K3Jx0cc0NY1gpNgyB3mrF_U-WU8FpZIVXlzzQeDXnAU.jpg", "ups": 57, "created_utc": "2019-10-04T22:29:50", "archived": "2019-10-05T12:26:36.970597", "subreddit": "indiegames"
+`
+This is a typical example of the articles data being collected from Reddit. The data is of various types, of various lengths, and may contain escape characters (e.g. \n) incompatible with Redshift. Data may be missing (the example is missing `selftext`) and datetimes will need to be converted to dates.
+
+The steps taken to clean this data was (1) identify only the fields we want to bring into Redshift and only keep that information; (2) remove all illegal characters for Redshift; and (3) save the transformed data as a CSV.
 
 ## Step 3. The Data Model
 
