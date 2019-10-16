@@ -13,10 +13,21 @@ By hooking the `lambda_handler` function within `reddit_lambda.py` I was able to
 YouTube data collection was also done via API. The top-level `youtube_lambda.py` has a command-line interface that draws out YouTube video metadata for an input topic and saves that information to S3 via CSV.
 
 ### Use cases
-There are numerous use cases for this data. The spirit of the community repository is to identify what particular communities of individuals are talking about. So under the "gaming" community broadly, what are the discussion points for a particular point in time? What is the community excited about, and what are some of the challenges? These questions can be answered in part by collecting data on community discussions.
+There are numerous use cases for this data.
+
+The spirit of the community repository is to identify what particular communities of individuals are talking about. So under the "gaming" community broadly, what are the discussion points for a particular point in time? What is the community excited about, and what are some of the challenges? These questions can be answered in part by collecting data on community discussions.
+
+Towards this end these data are gathered and pipelined into a postgres database on AWS Redshift to become analysis ready.
+
 
 ## Step 2. Exploring and assessing the data
+For both the Reddit and YouTube data the intent is to save as raw as possible JSON files into S3 and then clean/manipulate that data into RedShift via CSV files.
 
+The raw data is structured such that the article id is the key to the dictionary of information. Here is one example of one Reddit article in one S3 .json log file.
+
+```
+{"dden4u": {"title": "The Indie Industry: Defying the Odds", "score": 57, "url": "https://www.youtube.com/watch?v=VwV_59LBF4E", "name": "t3_dden4u", "author": "bisquick_quick", "is_video": false, "over_18": false, "selftext": "", "shortlink": "https://redd.it/dden4u", "subreddit_type": "public", "subreddit_subscribers": 41733, "thumbnail": "https://b.thumbs.redditmedia.com/K3Jx0cc0NY1gpNgyB3mrF_U-WU8FpZIVXlzzQeDXnAU.jpg", "ups": 57, "created_utc": "2019-10-04T22:29:50", "archived": "2019-10-05T12:26:36.970597", "subreddit": "indiegames"
+```
 
 ## Step 3. The Data Model
 
