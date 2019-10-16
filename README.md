@@ -8,7 +8,9 @@ The data gathered for this project consist of (1) Reddit articles and comments; 
 
 For Reddit, the data is gathered via the PRAW API. The `reddit_lambda.py` file at the top-level of the repository connects to submissions for particular subreddits and gathers submission information alongwith top-level comments. This file was written with the intent of converting it to a lambda function for scheduled running on AWS.
 
-By hooking the `lambda_handler` function within `reddit_lambda.py` I was able to gather over 1.7M Reddit comments along with thousands of observations of posts over the course of one weekend. This data was stored in JSON files on S3, which is described in section two (2).
+By hooking the `lambda_handler` function within `reddit_lambda.py` I was able to gather over 1.7M Reddit comments along with thousands of observations of posts over the course of one weekend. This data was stored in JSON files on S3, which is described in section two (2). Proof that this much data was in fact collected is shown via querying the final Redshift tables. See figure below.
+
+![Data model](https://github.com/wsankey/community/blob/master/capstone_datastats.png)
 
 YouTube data collection was also done via API. The top-level `youtube_lambda.py` has a command-line interface that draws out YouTube video metadata for an input topic and saves that information to S3 via CSV.
 
@@ -47,14 +49,13 @@ Meanwhile the YouTube general table cannot be merged with these Reddit data sour
 
 To get the data into this model we need to take the raw json logs and manipulate them. We first keep only the data we want from the logs, then we remove any potentially damanging character, such as an escape delimiter. Then we save that entire log file as a CSV. These data cleaning steps are completed in `etl/logs_to_csv.py`.
 
+Once the CSV files are constructed we can move them via RedShift COPY to the cluster. The articles and comments tables are created first, then the `top_comments` table is created afterwards using fields from those tables. The YouTube general table is made last.
+
 ## Step 4. ETL and modeling the data
-The following data dictionary shows the columns, data types, and tables for the various data we collect.
+The following data dictionary shows the columns, data types, and tables on the Redshift cluster.
 
 ![Data model](https://github.com/wsankey/community/blob/master/capstone_datadictionary.png)
 
-After running the Reddit lambda pipeline over two days and executing the YouTube command line argument for "gaming" one time I was able to collect over 1.7M observations. Nearly all of the observations are stored in the Comments table.
-
-![Data model](https://github.com/wsankey/community/blob/master/capstone_datastats.png)
 
 
 ## Step 5. What's the goal again? And other considerations
