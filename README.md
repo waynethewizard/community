@@ -49,14 +49,20 @@ Meanwhile the YouTube general table cannot be merged with these Reddit data sour
 
 To get the data into this model we need to take the raw json logs and manipulate them. We first keep only the data we want from the logs, then we remove any potentially damanging character, such as an escape delimiter. Then we save that entire log file as a CSV. These data cleaning steps are completed in `etl/logs_to_csv.py`.
 
+Opening a terminal and running `pyhton etl/logs_to_csv.py` will manipulate all logs files living with the S3 bucket and, after cleaning them via the aforementioned method, save them to another S3 bucket of S3s. The program is smart enough to pick up where the user may have left off.
+
 Once the CSV files are constructed we can move them via RedShift COPY to the cluster. The articles and comments tables are created first, then the `top_comments` table is created afterwards using fields from those tables. The YouTube general table is made last.
 
 ## Step 4. ETL and modeling the data
+The code for each step of this process, after actually gathering the data, are:
+1. Run `etl/create_tables.py` to create the tables in the Redshift cluster;
+2. Run `etl/etl.py` that will take the processed CSVs and insert them into the cluster.
+
 The following data dictionary shows the columns, data types, and tables on the Redshift cluster.
 
 ![Data model](https://github.com/wsankey/community/blob/master/capstone_datadictionary.png)
 
-
+To ensure the integrity of our data pipeline we will need to write tests. We can write unit tests around cleaning the data specifically for CSV creation. It is more difficult to unittest the correct variable type on the clsuter. However, we can go on the querying portion of Redshift and see that all of the variables for our tables match our description of those variables in the code. Final quality checks are done by spot-checking some of the JSON logs against the Redshift data records.
 
 ## Step 5. What's the goal again? And other considerations
 Having a database of comments for various themes allows us to see what a community is thinking down at the user level and over time. One potential use-case is to provide insight into how a community is responding to a particular issue or set of issues across any give time. We start to achieve these goals with this repository.
